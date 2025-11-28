@@ -1,12 +1,20 @@
 
 import { jsPDF } from 'jspdf'
+import { formatCurrency, formatNumber } from '@/utils/format'
 
-export default function ResultCard({ title, children, saveHandler, dataForSave }: { 
-  title: string, 
-  children: any, 
-  saveHandler?: (data:any)=>void,
+type ResultCardProps = {
+  title: string
+  children?: any
+  saveHandler?: (data:any)=>void
   dataForSave?: any
-}){
+  value?: number | string
+  format?: 'currency' | 'number' | 'raw'
+  className?: string
+}
+
+export default function ResultCard({
+  title, children, saveHandler, dataForSave, value, format = 'raw', className = ''
+}: ResultCardProps) {
   const exportPDF = () => {
     const doc = new jsPDF()
     doc.setFontSize(16)
@@ -18,8 +26,16 @@ export default function ResultCard({ title, children, saveHandler, dataForSave }
     doc.save(`${title.replace(/\s+/g,'_')}.pdf`)
   }
   const save = () => { if(saveHandler && dataForSave){ saveHandler(dataForSave) } }
+
+  const formattedValue = (() => {
+    if (value === undefined || value === null) return null
+    if (format === 'currency') return formatCurrency(value as number)
+    if (format === 'number') return formatNumber(value as number)
+    return String(value)
+  })()
+
   return (
-    <div className="card">
+    <div className={`card ${className}`}>
       <div className="stack" style={{justifyContent:'space-between'}}>
         <h3 style={{margin:0}}>{title}</h3>
         <div className="stack">
@@ -27,6 +43,13 @@ export default function ResultCard({ title, children, saveHandler, dataForSave }
           <button className="btn primary" onClick={exportPDF}>Exportar PDF</button>
         </div>
       </div>
+
+      {formattedValue !== null && (
+        <div style={{marginTop:10, marginBottom:8}}>
+          <div style={{fontSize: '1.25rem', fontWeight: 800, color:'#1f6f4a'}}>{formattedValue}</div>
+        </div>
+      )}
+
       <div id="result-content" style={{marginTop:12}}>
         {children}
       </div>
